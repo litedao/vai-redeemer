@@ -29,12 +29,10 @@ contract DaiRedeemer is DSAuth {
     }
 
     function redeem() external {
-        uint256 wad = from.balanceOf(msg.sender);
-        from.pull(msg.sender, wad);
-        to.push(msg.sender, wad);
+        redeem(from.balanceOf(msg.sender));
     }
 
-    function redeem(uint256 wad) external {
+    function redeem(uint256 wad) public {
         from.pull(msg.sender, wad);
         to.push(msg.sender, wad);
     }
