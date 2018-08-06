@@ -41,3 +41,18 @@ contract DaiRedeemer is DSAuth {
         token.push(msg.sender, wad);
     }
 }
+
+contract DaiRedeemerProxy {
+    function redeem(DaiRedeemer daiRedeemer) external {
+        redeem(daiRedeemer, daiRedeemer.from().balanceOf(msg.sender));
+    }
+
+    function redeem(DaiRedeemer daiRedeemer, uint256 wad) public {
+        daiRedeemer.from().pull(msg.sender, wad);
+        if (daiRedeemer.from().allowance(this, daiRedeemer) < wad) {
+            daiRedeemer.from().approve(daiRedeemer, uint(-1));
+        }
+        daiRedeemer.redeem(wad);
+        daiRedeemer.to().transfer(msg.sender, wad);
+    }
+}
