@@ -39,11 +39,11 @@ contract TokenUser {
     function doPull(address who, uint amount) public {
         token.pull(who, amount);
     }
-    function doRedeem() public {
-        r.redeem();
-    }
     function doRedeem(uint256 wad) public {
         r.redeem(wad);
+    }
+    function doUndo(uint256 wad) public {
+        r.undo(wad);
     }
     function doReclaim(uint256 wad) public {
         r.reclaim(token, wad);
@@ -78,6 +78,11 @@ contract DaiRedeemerTest is DSTest {
 
         assertEq(to.balanceOf(r), 40);
         assertEq(to.balanceOf(this), 60);
+
+        r.reclaim(to, 40);
+
+        assertEq(to.balanceOf(r), 0);
+        assertEq(to.balanceOf(this), 100);
     }
 
     function testFail_reclaim() public {
@@ -90,25 +95,6 @@ contract DaiRedeemerTest is DSTest {
         assertEq(from.balanceOf(user), 90);
 
         user.doReclaim(10);
-    }
-
-    function test_redeem() public {
-        to.push(r, 100);
-        
-        assertEq(from.balanceOf(user), 100);
-        assertEq(to.balanceOf(user), 0);
-
-        assertEq(from.balanceOf(r), 0);
-        assertEq(to.balanceOf(r), 100);
-
-        user.doApprove(r);
-        user.doRedeem();
-
-        assertEq(from.balanceOf(user), 0);
-        assertEq(to.balanceOf(user), 100);
-
-        assertEq(from.balanceOf(r), 100);
-        assertEq(to.balanceOf(r), 0);
     }
 
     function test_redeem_wad() public {

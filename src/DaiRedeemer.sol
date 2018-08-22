@@ -20,21 +20,22 @@ pragma solidity ^0.4.24;
 import "ds-token/token.sol";
 
 contract DaiRedeemer is DSAuth {
-    DSToken public from;
-    DSToken public to;
+    DSToken public scd;
+    DSToken public mcd;
 
-    constructor(DSToken from_, DSToken to_) public {
-        from = from_;
-        to = to_;
+    constructor(DSToken scd_, DSToken mcd_) public {
+        scd = scd_;
+        mcd = mcd_;
     }
 
-    function redeem() external {
-        redeem(from.balanceOf(msg.sender));
+    function redeem(uint256 wad) external {
+        scd.pull(msg.sender, wad);
+        mcd.push(msg.sender, wad);
     }
 
-    function redeem(uint256 wad) public {
-        from.pull(msg.sender, wad);
-        to.push(msg.sender, wad);
+    function undo(uint256 wad) external {
+        mcd.pull(msg.sender, wad);
+        scd.push(msg.sender, wad);
     }
 
     function reclaim(DSToken token, uint256 wad) external auth {
@@ -43,16 +44,12 @@ contract DaiRedeemer is DSAuth {
 }
 
 contract DaiRedeemerProxy {
-    function redeem(DaiRedeemer daiRedeemer) external {
-        redeem(daiRedeemer, daiRedeemer.from().balanceOf(msg.sender));
-    }
-
-    function redeem(DaiRedeemer daiRedeemer, uint256 wad) public {
-        daiRedeemer.from().pull(msg.sender, wad);
-        if (daiRedeemer.from().allowance(this, daiRedeemer) < wad) {
-            daiRedeemer.from().approve(daiRedeemer, uint(-1));
+    function redeem(DaiRedeemer r, uint256 wad) public {
+        r.scd().pull(msg.sender, wad);
+        if (r.scd().allowance(this, r) < wad) {
+            r.scd().approve(r);
         }
-        daiRedeemer.redeem(wad);
-        daiRedeemer.to().transfer(msg.sender, wad);
+        r.redeem(wad);
+        r.mcd().transfer(msg.sender, wad);
     }
 }
